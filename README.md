@@ -60,7 +60,7 @@ The installer also makes the following powerful open-source tools **available fo
 
 ✅ [**Prometheus**](https://prometheus.io/) - An open-source monitoring and alerting toolkit to keep an eye on system health.
 
-✅ [**Qdrant**](https://qdrant.tech/) - A high-performance open-source vector store, specialized for AI. While Supabase also offers vector capabilities, Qdrant is included for its speed, making it ideal for demanding AI tasks.
+✅ [**Qdrant**](https://qdrant.tech/) - **Setup up in Multitenancy Mode.** A high-performance open-source vector store, specialized for AI. While Supabase also offers vector capabilities, Qdrant is included for its speed, making it ideal for demanding AI tasks.
 
 ✅ [**RAGApp**](https://github.com/ragapp/ragapp) - Open-source application to build Retrieval-Augmented Generation (RAG) assistants over your data. Provides a web UI for chat and an HTTP API for integration with your workflows.
 
@@ -107,7 +107,7 @@ The recommended way to install is using the provided main installation script.
 2.  Run the following command:
 
     ```bash
-    git clone https://github.com/kossakovsky/n8n-installer && cd n8n-installer && sudo bash ./scripts/install.sh
+    git clone https://github.com/automat-ai-git/n8n-installer && cd n8n-installer && sudo bash ./scripts/install.sh
     ```
 
 This single command automates the entire setup process, including:
