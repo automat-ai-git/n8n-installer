@@ -319,6 +319,58 @@ is_profile_active() {
     [[ -n "$COMPOSE_PROFILES" && ",$COMPOSE_PROFILES," == *",$profile,"* ]]
 }
 
+# Get n8n workers compose file path if profile is active and file exists
+# Usage: path=$(get_n8n_workers_compose) && COMPOSE_FILES+=("-f" "$path")
+get_n8n_workers_compose() {
+    local compose_file="$PROJECT_ROOT/docker-compose.n8n-workers.yml"
+    if [ -f "$compose_file" ] && is_profile_active "n8n"; then
+        echo "$compose_file"
+        return 0
+    fi
+    return 1
+}
+
+# Get Supabase compose file path if profile is active and file exists
+# Usage: path=$(get_supabase_compose) && COMPOSE_FILES+=("-f" "$path")
+get_supabase_compose() {
+    local compose_file="$PROJECT_ROOT/supabase/docker/docker-compose.yml"
+    if [ -f "$compose_file" ] && is_profile_active "supabase"; then
+        echo "$compose_file"
+        return 0
+    fi
+    return 1
+}
+
+# Get Dify compose file path if profile is active and file exists
+# Usage: path=$(get_dify_compose) && COMPOSE_FILES+=("-f" "$path")
+get_dify_compose() {
+    local compose_file="$PROJECT_ROOT/dify/docker/docker-compose.yaml"
+    if [ -f "$compose_file" ] && is_profile_active "dify"; then
+        echo "$compose_file"
+        return 0
+    fi
+    return 1
+}
+
+# Build array of all active compose files (main + external services)
+# IMPORTANT: Requires COMPOSE_PROFILES to be set before calling (via load_env)
+# Usage: build_compose_files_array; docker compose "${COMPOSE_FILES[@]}" up -d
+# Result is stored in global COMPOSE_FILES array
+build_compose_files_array() {
+    COMPOSE_FILES=("-f" "$PROJECT_ROOT/docker-compose.yml")
+
+    local path
+    if path=$(get_n8n_workers_compose); then
+        COMPOSE_FILES+=("-f" "$path")
+    fi
+    if path=$(get_supabase_compose); then
+        COMPOSE_FILES+=("-f" "$path")
+    fi
+    if path=$(get_dify_compose); then
+        COMPOSE_FILES+=("-f" "$path")
+    fi
+}
+
 #=============================================================================
 # UTILITIES
 #=============================================================================
@@ -635,6 +687,22 @@ cleanup_legacy_n8n_workers() {
         log_success "Removed $removed_count legacy n8n worker container(s)"
     else
         log_info "No legacy n8n worker containers found"
+    fi
+}
+
+# Clean up legacy postgresus container after rename to databasus
+# This function removes the old "postgresus" container if it exists,
+# allowing the new "databasus" container to take its place.
+# Usage: cleanup_legacy_postgresus
+cleanup_legacy_postgresus() {
+    local container_name="postgresus"
+
+    # Check if container exists (running or stopped)
+    if docker ps -a --format '{{.Names}}' | grep -q "^${container_name}$"; then
+        log_info "Found legacy postgresus container, migrating to databasus..."
+        docker stop "$container_name" 2>/dev/null || true
+        docker rm -f "$container_name" 2>/dev/null || true
+        log_success "Legacy postgresus container removed. Databasus will use existing data via volume alias."
     fi
 }
 

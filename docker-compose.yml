@@ -8,7 +8,8 @@ volumes:
   langfuse_clickhouse_data:
   langfuse_clickhouse_logs:
   langfuse_minio_data:
-  langfuse_postgres_data:
+  postgres_data:
+    name: localai_langfuse_postgres_data
   letta_data:
   libretranslate_api_keys:
   libretranslate_models:
@@ -22,7 +23,7 @@ volumes:
   paddleocr_cache:
   paddlex_data:
   portainer_data:
-  postgresus_data:
+  databasus_data:
   postiz-config:
   postiz-uploads:
   prometheus_data:
@@ -336,7 +337,7 @@ services:
       PADDLEOCR_PASSWORD_HASH: ${PADDLEOCR_PASSWORD_HASH}
       PADDLEOCR_USERNAME: ${PADDLEOCR_USERNAME}
       PORTAINER_HOSTNAME: ${PORTAINER_HOSTNAME}
-      POSTGRESUS_HOSTNAME: ${POSTGRESUS_HOSTNAME}
+      DATABASUS_HOSTNAME: ${DATABASUS_HOSTNAME}
       POSTIZ_HOSTNAME: ${POSTIZ_HOSTNAME}
       PROMETHEUS_HOSTNAME: ${PROMETHEUS_HOSTNAME}
       PROMETHEUS_PASSWORD_HASH: ${PROMETHEUS_PASSWORD_HASH}
@@ -536,14 +537,14 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres
     volumes:
-      # TODO: Rename to postgres_data
-      - langfuse_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     container_name: redis
     image: docker.io/valkey/valkey:8-alpine
     command: valkey-server --save 30 1 --loglevel warning
     restart: unless-stopped
+    stop_grace_period: 30s
     volumes:
       - valkey-data:/data
     cap_drop:
@@ -837,13 +838,24 @@ services:
       redis:
         condition: service_healthy
 
-  postgresus:
-    image: rostislavdugin/postgresus:latest
-    container_name: postgresus
-    profiles: ["postgresus"]
+  databasus:
+    image: databasus/databasus:latest
+    container_name: databasus
+    profiles: ["databasus"]
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
     volumes:
-      - postgresus_data:/postgresus-data
+      - databasus_data:/databasus-data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4005/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   comfyui:
     image: yanwk/comfyui-boot:cu124-slim

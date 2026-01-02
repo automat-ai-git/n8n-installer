@@ -21,6 +21,8 @@ This is **n8n-install**, a Docker Compose-based installer that provides a compre
 - `.env`: Generated secrets and configuration (from `.env.example`)
 - `scripts/install.sh`: Main installation orchestrator (runs numbered scripts 01-08 in sequence)
 - `scripts/utils.sh`: Shared utility functions (sourced by all scripts via `source "$(dirname "$0")/utils.sh" && init_paths`)
+- `scripts/01_system_preparation.sh`: System updates, firewall, security hardening
+- `scripts/02_install_docker.sh`: Docker and Docker Compose installation
 - `scripts/git.sh`: Git utilities (sync with origin, branch detection, configuration)
 - `scripts/03_generate_secrets.sh`: Secret generation and bcrypt hashing
 - `scripts/04_wizard.sh`: Interactive service selection using whiptail
@@ -63,7 +65,8 @@ The update flow (`scripts/update.sh`) similarly orchestrates: git fetch + reset 
 make install           # Full installation (runs scripts/install.sh)
 make update            # Update system and services
 make update-preview    # Preview available updates (dry-run)
-make clean             # Remove unused Docker resources
+make clean             # Remove unused Docker resources (preserves data)
+make clean-all         # Remove ALL Docker resources including data (DANGEROUS)
 
 make logs              # View logs (all services)
 make logs s=<service>  # View logs for specific service
@@ -152,6 +155,8 @@ Key functions:
 - `get_real_user` / `get_real_user_home` - Get actual user even under sudo
 - `backup_preserved_dirs` / `restore_preserved_dirs` - Directory preservation for git updates
 - `cleanup_legacy_n8n_workers` - Remove old n8n worker containers from previous naming convention
+- `get_n8n_workers_compose` / `get_supabase_compose` / `get_dify_compose` - Get compose file path if profile active AND file exists
+- `build_compose_files_array` - Build global `COMPOSE_FILES` array with all active compose files (main + external)
 
 ### Service Profiles
 
